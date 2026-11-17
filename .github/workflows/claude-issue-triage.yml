@@ -1,0 +1,65 @@
+name: Claude Issue Triage
+
+on:
+  issues:
+    types: [opened, edited]
+
+concurrency:
+  group: triage-${{ github.event.issue.number }}
+  cancel-in-progress: true
+
+jobs:
+  triage:
+    # Omite bots (evita bucles) y, en ediciones, solo reacciona si cambió título o cuerpo
+    if: |
+      github.event.sender.type != 'Bot' &&
+      (github.event.action == 'opened' ||
+       github.event.changes.body != null ||
+       github.event.changes.title != null)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      issues: write
+      id-token: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Triaje del issue con Claude
+        uses: anthropics/claude-code-action@v1
+        with:
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          prompt: |
+            REPO: ${{ github.repository }}
+            ISSUE: #${{ github.event.issue.number }}
+            EVENTO: ${{ github.event.action }}
+
+            Eres el agente de triaje de un Tetris en JavaScript vanilla (Canvas).
+            La arquitectura está descrita en CLAUDE.md; el código vive en game.js, index.html y style.css.
+            Responde siempre en español. NO modifiques código ni abras PRs.
+
+            Pasos:
+            1. Lee el issue con `gh issue view ${{ github.event.issue.number }} --json title,body,labels,comments`.
+            2. Revisa los labels existentes con `gh label list`. Elige labels SOLO de este conjunto:
+               - Tipo (uno): `bug`, `enhancement`, `question`, `documentation`
+               - Área (uno o más): `area:gameplay`, `area:render`, `area:input`, `area:puntuacion`, `area:ui`
+               - Prioridad (uno): `prioridad:alta`, `prioridad:media`, `prioridad:baja`
+               Si un label elegido no existe, créalo con `gh label create`.
+               Aplícalos con `gh issue edit ${{ github.event.issue.number }} --add-label "..."`.
+               Si el evento es `edited`, quita con `--remove-label` los labels de este conjunto que ya no apliquen.
+            3. Busca en el código (Read, Grep, Glob) las funciones y archivos relacionados con el problema.
+            4. Publica UN comentario de diagnóstico que empiece con la línea `<!-- claude-triage -->`
+               y tenga estas secciones:
+               - **Resumen**: el problema en 1-2 frases.
+               - **Clasificación**: labels asignados y por qué.
+               - **Archivos y funciones afectadas**: rutas con `archivo:línea`.
+               - **Causa probable**: hipótesis basada en el código.
+               - **Propuesta de solución**: pasos concretos para implementarla.
+               - **Criterios de verificación**: cómo probarlo jugando en el navegador.
+               - **Información faltante**: preguntas al autor, si hace falta.
+               Si el evento es `edited`, busca antes un comentario existente con el marcador
+               `<!-- claude-triage -->` y actualízalo con `gh issue comment ${{ github.event.issue.number }} --edit-last`
+               en lugar de crear otro. Si no existe, créalo.
+          claude_args: '--allowed-tools "Bash(gh issue view:*),Bash(gh issue edit:*),Bash(gh issue comment:*),Bash(gh label list:*),Bash(gh label create:*),Read,Grep,Glob"'
