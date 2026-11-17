@@ -157,7 +157,7 @@ function clearLines() {
   if (cleared) {
     lines += cleared;
     score += (LINE_SCORES[cleared] || 0) * level;
-    level = Math.max(startLevel, Math.floor(lines / 10) + 1);
+    level = startLevel + Math.floor(lines / 10);
     dropInterval = speedFor(level);
     updateHUD();
   }
@@ -335,7 +335,11 @@ function init() {
 }
 
 document.addEventListener('keydown', e => {
-  if (e.code === 'KeyP' || e.code === 'Escape') { togglePause(); return; }
+  if (e.code === 'KeyP' || e.code === 'Escape') {
+    if (e.repeat || e.target === startLevelSelect) return; // Esc cierra el desplegable nativo
+    togglePause();
+    return;
+  }
   if (paused || gameOver) return;
   switch (e.code) {
     case 'ArrowLeft':
