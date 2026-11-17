@@ -95,6 +95,7 @@ function loadRecords() {
     if (Array.isArray(data.entries)) {
       records.entries = data.entries
         .filter(en => en && Number.isFinite(en.score))
+        .sort((a, b) => b.score - a.score)
         .slice(0, MAX_RECORDS);
     }
     records.bestCombo = Number(data.bestCombo) || 0;
@@ -440,6 +441,8 @@ document.addEventListener('keydown', e => {
   // No jugar mientras se escribe en un campo de texto (p. ej. el nombre del record)
   const tag = e.target && e.target.tagName;
   if (tag === 'INPUT' || tag === 'TEXTAREA') return;
+  // Sin partida iniciada (pantalla de inicio) no hay estado de juego
+  if (!current) return;
   if (e.code === 'KeyP') { togglePause(); return; }
   if (paused || gameOver) return;
   switch (e.code) {
@@ -464,7 +467,7 @@ document.addEventListener('keydown', e => {
   updateHUD();
 });
 
-restartBtn.addEventListener('click', init);
+restartBtn.addEventListener('click', () => { init(); restartBtn.blur(); });
 
 themeBtn.addEventListener('click', () => {
   setTheme(document.documentElement.dataset.theme === 'light' ? 'dark' : 'light');
