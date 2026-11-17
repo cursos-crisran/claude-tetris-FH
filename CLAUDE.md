@@ -22,7 +22,7 @@ Tres archivos: `index.html` (estructura y IDs del DOM), `style.css` (estilos), `
 - **Ciclo de pieza**: `lockPiece()` → `merge()` → `clearLines()` (actualiza puntuación, nivel y `dropInterval`) → `spawn()` (toma `next`, genera otra y llama a `endGame()` si la nueva pieza colisiona).
 - **Colisión/rotación**: `collide(shape, ox, oy)` es la base de movimiento, rotación (`tryRotate` con wall kicks `[0,-1,1,-2,2]`), pieza fantasma (`ghostY`) y hard drop.
 - **Puntuación**: `LINE_SCORES × level`, +1 por soft drop, +2 por celda en hard drop. Nivel = `floor(lines/10)+1`; `dropInterval = max(100, 1000 - (level-1)*90)`.
-- **Input**: un solo listener `keydown` (flechas, `X` rota, `Space` hard drop, `P` pausa). El overlay de pausa/game over se reutiliza cambiando `overlay-title`/`overlay-score`; el botón de reinicio llama a `init()`.
+- **Input**: un solo listener `keydown` (flechas, `X` rota, `Space` hard drop, `P`/`Esc` pausa). `#overlay` solo sirve a game over (botón de reinicio llama a `init()`); la pausa usa el menú propio `#pause-menu` (Reanudar, Reiniciar, Ver controles, Nivel inicial) y, con `paused`, el keydown solo atiende `P`/`Esc`. `startLevel` se persiste en localStorage `tetris-start-level`; `init()` arranca en ese nivel y `clearLines` usa `max(startLevel, floor(lines/10)+1)`.
 - **Render**: `draw()` pinta cuadrícula, tablero, fantasma (alpha 0.2) y pieza actual; `drawNext()` dibuja la siguiente en un canvas aparte de 4×4 bloques.
 
 Las dimensiones del canvas (`300×600`, `120×120`) están duplicadas entre `index.html` y las constantes `COLS`/`ROWS`/`BLOCK` de `game.js`; deben mantenerse coherentes (`COLS*BLOCK` × `ROWS*BLOCK`).
