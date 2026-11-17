@@ -17,7 +17,7 @@ Tres archivos: `index.html` (estructura y IDs del DOM), `style.css` (estilos), `
 
 `game.js` es un único script en modo estricto con estado global mutable (`board`, `current`, `next`, `score`, `lines`, `level`, `paused`, `gameOver`, `dropInterval`, etc.), reiniciado por `init()`. Puntos clave que requieren entender varias funciones a la vez:
 
-- **Piezas**: `PIECES` y `COLORS` se indexan por el mismo número (1–7). Cada celda de la matriz de la pieza guarda su propio índice de color, y ese mismo valor se escribe en `board` al fijarla (`merge`); `0` es vacío. Añadir una pieza implica tocar ambos arrays y el `* 7` en `randomPiece()`.
+- **Piezas**: `PIECES` y `COLORS` se indexan por el mismo número (1–8; la 8 es la tuerca 3×3 con centro vacío). Cada celda de la matriz de la pieza guarda su propio índice de color, y ese mismo valor se escribe en `board` al fijarla (`merge`); `0` es vacío. Añadir una pieza implica tocar ambos arrays; `randomPiece()` usa `PIECES.length - 1`, así que no hay que cambiar nada más.
 - **Bucle**: `loop(ts)` (vía `requestAnimationFrame`) acumula `dropAccum` y baja la pieza cuando supera `dropInterval`; si no puede bajar llama a `lockPiece()`. `animId` se cancela en pausa, game over e `init()`.
 - **Ciclo de pieza**: `lockPiece()` → `merge()` → `clearLines()` (actualiza puntuación, nivel y `dropInterval`) → `spawn()` (toma `next`, genera otra y llama a `endGame()` si la nueva pieza colisiona).
 - **Colisión/rotación**: `collide(shape, ox, oy)` es la base de movimiento, rotación (`tryRotate` con wall kicks `[0,-1,1,-2,2]`), pieza fantasma (`ghostY`) y hard drop.
