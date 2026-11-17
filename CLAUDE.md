@@ -22,7 +22,8 @@ Tres archivos: `index.html` (estructura y IDs del DOM), `style.css` (estilos), `
 - **Ciclo de pieza**: `lockPiece()` → `merge()` → `clearLines()` (actualiza puntuación, nivel y `dropInterval`) → `spawn()` (toma `next`, genera otra y llama a `endGame()` si la nueva pieza colisiona).
 - **Colisión/rotación**: `collide(shape, ox, oy)` es la base de movimiento, rotación (`tryRotate` con wall kicks `[0,-1,1,-2,2]`), pieza fantasma (`ghostY`) y hard drop.
 - **Puntuación**: `LINE_SCORES × level`, +1 por soft drop, +2 por celda en hard drop. Nivel = `floor(lines/10)+1`; `dropInterval = max(100, 1000 - (level-1)*90)`.
-- **Input**: un solo listener `keydown` (flechas, `X` rota, `Space` hard drop, `P` pausa). El overlay de pausa/game over se reutiliza cambiando `overlay-title`/`overlay-score`; el botón de reinicio llama a `init()`.
+- **Records**: `loadRecords`/`saveRecords` (`localStorage`, clave `tetris-records`, en try/catch) guardan `{entries:[{name,score,lines,combo,date}] (top 5), bestCombo, maxLines}`. `combo` cuenta locks consecutivos que limpian líneas (se actualiza en `clearLines`; se resetea si un lock no limpia). El juego ya no arranca solo: `#start-screen` muestra el top 5 y el botón Jugar llama a `init()`; `endGame()` muestra el formulario de nombre (si entra en el top), la tabla con `.highlight` y el reseteo.
+- **Input**: un solo listener `keydown` (flechas, `X` rota, `Space` hard drop, `P` pausa; ignora teclas si el foco está en un input/textarea). El overlay de pausa/game over se reutiliza cambiando `overlay-title`/`overlay-score`; el botón de reinicio llama a `init()`.
 - **Render**: `draw()` pinta cuadrícula, tablero, fantasma (alpha 0.2) y pieza actual; `drawNext()` dibuja la siguiente en un canvas aparte de 4×4 bloques.
 
 Las dimensiones del canvas (`300×600`, `120×120`) están duplicadas entre `index.html` y las constantes `COLS`/`ROWS`/`BLOCK` de `game.js`; deben mantenerse coherentes (`COLS*BLOCK` × `ROWS*BLOCK`).
