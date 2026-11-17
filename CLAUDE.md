@@ -23,6 +23,7 @@ Tres archivos: `index.html` (estructura y IDs del DOM), `style.css` (estilos), `
 - **Colisión/rotación**: `collide(shape, ox, oy)` es la base de movimiento, rotación (`tryRotate` con wall kicks `[0,-1,1,-2,2]`), pieza fantasma (`ghostY`) y hard drop.
 - **Puntuación**: `LINE_SCORES × level`, +1 por soft drop, +2 por celda en hard drop. Nivel = `floor(lines/10)+1`; `dropInterval = max(100, 1000 - (level-1)*90)`.
 - **Input**: un solo listener `keydown` (flechas, `X` rota, `Space` hard drop, `P` pausa). El overlay de pausa/game over se reutiliza cambiando `overlay-title`/`overlay-score`; el botón de reinicio llama a `init()`.
+- **Skins**: `SKINS = { retro, neon, pastel, pixel }`; cada una define `colors` (9 entradas, mismo índice que `COLORS`), `background` (neon fuerza negro; `null` respeta el tema), `grid` y `drawBlock(context, px, py, color, size)`. El `drawBlock(context, x, y, colorIndex, size, alpha)` global delega en la skin activa dentro de `save()/restore()`. `setSkin()`/`loadSkin()` persisten en `localStorage` (`tetris-skin`); el selector es `#skin-select`.
 - **Render**: `draw()` pinta cuadrícula, tablero, fantasma (alpha 0.2) y pieza actual; `drawNext()` dibuja la siguiente en un canvas aparte de 4×4 bloques.
 
 Las dimensiones del canvas (`300×600`, `120×120`) están duplicadas entre `index.html` y las constantes `COLS`/`ROWS`/`BLOCK` de `game.js`; deben mantenerse coherentes (`COLS*BLOCK` × `ROWS*BLOCK`).
