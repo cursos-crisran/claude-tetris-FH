@@ -44,6 +44,7 @@ Es una versión jugable del Tetris clásico con todas las mecánicas que esperar
 - **Niveles** que aumentan cada 10 líneas y aceleran la caída.
 - **Pausa** y **Game Over** con opción de reinicio.
 - **Skins visuales** (Retro, Neon, Pastel, Pixel art) seleccionables desde el selector superior; la elección se recuerda en `localStorage`.
+- **Pantalla de inicio** y **tabla de records local** (top 5 con nombre, mejor combo y líneas máximas) guardada en `localStorage` (`tetris-records`), con botón para resetearla.
 
 ---
 
@@ -123,6 +124,7 @@ Contiene toda la lógica del juego. A grandes rasgos:
 ### Flujo del juego
 
 ```
+pantalla de inicio (#start-screen) → botón Jugar
 init()
   ├─ createBoard()                  → matriz vacía
   ├─ next = randomPiece()
