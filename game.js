@@ -43,6 +43,32 @@ const overlayScore = document.getElementById('overlay-score');
 const restartBtn = document.getElementById('restart-btn');
 const themeBtn = document.getElementById('theme-toggle');
 const skinSelect = document.getElementById('skin-select');
+const pauseMenu = document.getElementById('pause-menu');
+const resumeBtn = document.getElementById('resume-btn');
+const pauseRestartBtn = document.getElementById('pause-restart-btn');
+const startLevelSelect = document.getElementById('start-level');
+const controlsToggle = document.getElementById('controls-toggle');
+const controlsList = document.getElementById('controls-list');
+
+const START_LEVEL_KEY = 'tetris-start-level';
+const MAX_START_LEVEL = 10;
+let startLevel = 1;
+
+function loadStartLevel() {
+  let saved = null;
+  try { saved = localStorage.getItem(START_LEVEL_KEY); } catch (e) { /* ignorar */ }
+  const n = parseInt(saved, 10);
+  startLevel = n >= 1 && n <= MAX_START_LEVEL ? n : 1;
+}
+
+function setStartLevel(n) {
+  startLevel = n;
+  try { localStorage.setItem(START_LEVEL_KEY, String(n)); } catch (e) { /* sin persistencia */ }
+}
+
+function speedFor(lvl) {
+  return Math.max(100, 1000 - (lvl - 1) * 90);
+}
 
 const THEME_KEY = 'tetris-theme';
 let themeGridColor = '#22222e';
@@ -262,8 +288,8 @@ function clearLines() {
   if (cleared) {
     lines += cleared;
     score += (LINE_SCORES[cleared] || 0) * level;
-    level = Math.floor(lines / 10) + 1;
-    dropInterval = Math.max(100, 1000 - (level - 1) * 90);
+    level = startLevel + Math.floor(lines / 10);
+    dropInterval = speedFor(level);
     updateHUD();
   }
 }
@@ -383,13 +409,18 @@ function togglePause() {
   if (gameOver) return;
   paused = !paused;
   if (!paused) {
+    pauseMenu.classList.add('hidden');
+    // Evita que Space/flechas reactiven un botón o cambien el select
+    if (document.activeElement && document.activeElement.blur) document.activeElement.blur();
     lastTime = performance.now();
-    loop(lastTime);
+    dropAccum = 0;
+    cancelAnimationFrame(animId);
+    animId = requestAnimationFrame(loop);
   } else {
     cancelAnimationFrame(animId);
-    overlayTitle.textContent = 'PAUSA';
-    overlayScore.textContent = '';
-    overlay.classList.remove('hidden');
+    startLevelSelect.value = String(startLevel);
+    pauseMenu.classList.remove('hidden');
+    resumeBtn.focus();
   }
 }
 
@@ -414,22 +445,28 @@ function init() {
   board = createBoard();
   score = 0;
   lines = 0;
-  level = 1;
+  level = startLevel;
   paused = false;
   gameOver = false;
-  dropInterval = 1000;
+  dropInterval = speedFor(level);
   dropAccum = 0;
   lastTime = performance.now();
   next = randomPiece();
   spawn();
   updateHUD();
   overlay.classList.add('hidden');
+  pauseMenu.classList.add('hidden');
+  if (document.activeElement && document.activeElement.blur) document.activeElement.blur();
   cancelAnimationFrame(animId);
   animId = requestAnimationFrame(loop);
 }
 
 document.addEventListener('keydown', e => {
-  if (e.code === 'KeyP') { togglePause(); return; }
+  if (e.code === 'KeyP' || e.code === 'Escape') {
+    if (e.repeat || e.target === startLevelSelect) return; // Esc cierra el desplegable nativo
+    togglePause();
+    return;
+  }
   if (paused || gameOver) return;
   switch (e.code) {
     case 'ArrowLeft':
@@ -455,6 +492,18 @@ document.addEventListener('keydown', e => {
 
 restartBtn.addEventListener('click', init);
 
+for (let i = 1; i <= MAX_START_LEVEL; i++) {
+  startLevelSelect.add(new Option(String(i), String(i)));
+}
+resumeBtn.addEventListener('click', togglePause);
+pauseRestartBtn.addEventListener('click', init);
+startLevelSelect.addEventListener('change', () => setStartLevel(parseInt(startLevelSelect.value, 10)));
+controlsToggle.addEventListener('click', () => {
+  const open = controlsList.classList.toggle('hidden') === false;
+  controlsToggle.setAttribute('aria-expanded', String(open));
+  controlsToggle.textContent = open ? 'Ocultar controles' : 'Ver controles';
+});
+
 themeBtn.addEventListener('click', () => {
   setTheme(document.documentElement.dataset.theme === 'light' ? 'dark' : 'light');
   themeBtn.blur(); // evita que Space reactive el botón en lugar del hard drop
@@ -465,6 +514,7 @@ skinSelect.addEventListener('change', () => {
   skinSelect.blur(); // evita que Space cambie el selector en lugar del hard drop
 });
 
+loadStartLevel();
 init();
 loadTheme();
 loadSkin();
